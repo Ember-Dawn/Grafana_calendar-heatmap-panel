@@ -1,21 +1,43 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "panel",
-  "name": "Calendar-Heatmap-Panel",
+  "name": "Calendar Heatmap",
   "id": "tim012432-calendarheatmap-panel",
   "info": {
     "keywords": ["heatmap", "calendar", "github", "contributions", "activity"],
-    "description": "",
+    "description": "Shows a calendar heatmap panel similar to GitHub contribution graphs.",
     "author": {
-      "name": "Tim0-12432",
+      "name": "Tim0_12432",
       "url": "https://github.com/tim0-12432"
     },
     "logos": {
       "small": "img/logo.svg",
       "large": "img/logo.svg"
     },
-    "links": [],
-    "screenshots": [],
+    "links": [
+      {
+        "name": "GitHub Repository",
+        "url": "https://github.com/tim0-12432/calendar-heatmap-panel"
+      }
+    ],
+    "screenshots": [
+      {
+        "name": "Theme Light with Color Orange",
+        "path": "img/demo-light.png"
+      },
+      {
+        "name": "Theme Dark with Color Green",
+        "path": "img/demo-dark.png"
+      },
+      {
+        "name": "Theme Tron with Color Blue",
+        "path": "img/demo-tron.png"
+      },
+      {
+        "name": "Configuration Options",
+        "path": "img/demo-configuration.png"
+      }
+    ],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },

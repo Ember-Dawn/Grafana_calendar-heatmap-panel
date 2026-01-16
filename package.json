@@ -13,8 +13,8 @@
     "server": "docker compose up --build",
     "sign": "npx --yes @grafana/sign-plugin@latest"
   },
-  "author": "Tim0 12432",
-  "license": "Apache-2.0",
+  "author": "Tim0_12432",
+  "license": "MIT",
   "devDependencies": {
     "@grafana/eslint-config": "^9.0.0",
     "@grafana/plugin-e2e": "^3.1.2",

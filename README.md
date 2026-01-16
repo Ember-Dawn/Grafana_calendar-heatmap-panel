@@ -1,117 +1,281 @@
-# Grafana panel plugin template
+# Calendar Heatmap Panel
 
-This template is a starting point for building a panel plugin for Grafana.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Grafana](https://img.shields.io/badge/Grafana-11.6%2B-orange.svg)](https://grafana.com)
+[![Node](https://img.shields.io/badge/Node-22%2B-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 
-## What are Grafana panel plugins?
+A Grafana panel plugin that renders time-series data as an interactive calendar heatmap inspired by GitHub contribution graphs.
 
-Panel plugins allow you to add new types of visualizations to your dashboard, such as maps, clocks, pie charts, lists, and more.
+- **Plugin ID:** `tim012432-calendarheatmap-panel`
+- **Author:** Tim0 12432
+- **Version:** 1.0.0
 
-Use panel plugins when you want to do things like visualize data returned by data source queries, navigate between dashboards, or control external systems (such as smart home devices).
+## 🌟 Features
 
-## Getting started
+### Core
 
-### Frontend
+- GitHub-style calendar visualization for daily time-series values
+- Six built-in color schemes: Green, Blue, Red, Yellow, Purple, Orange
+- Five aggregation methods: Sum, Count, Average, Maximum, Minimum
+- Auto-sizing cells to fit the available panel width
+- Theme-aware rendering for Grafana light and dark modes
+- Interactive tooltips with formatted date and value
 
-1. Install dependencies
+### Customization
 
-   ```bash
-   npm install
-   ```
+- Cell size (8–20 px), spacing (1–24 px), and corner radius (0–6 px)
+- Optional week-day labels, month labels, and legend
+- Toggle tooltips and choose aggregation per panel
 
-2. Build plugin in development mode and run in watch mode
+### Data Handling
 
-   ```bash
-   npm run dev
-   ```
+- Efficient daily aggregation for large time ranges
+- Real-time updates driven by Grafana time range refresh
+- Works with any data source that returns timestamp + numeric value
 
-3. Build plugin in production mode
+## 🔧 Requirements
 
-   ```bash
-   npm run build
-   ```
+- Grafana **11.6.0+**
+- Node.js **22+** and npm for local development
 
-4. Run the tests (using Jest)
+## 🚀 Installation
 
-   ```bash
-   # Runs the tests and watches for changes, requires git init first
-   npm run test
+### Grafana Catalog (recommended)
 
-   # Exits after running all the tests
-   npm run test:ci
-   ```
+_Plugin is pending Grafana catalog publication. Use manual installation until approved._
 
-5. Spin up a Grafana instance and run the plugin inside it (using Docker)
+### Grafana CLI
 
-   ```bash
-   npm run server
-   ```
+```bash
+grafana-cli plugins install tim012432-calendarheatmap-panel
+```
 
-6. Run the E2E tests (using Playwright)
+Restart Grafana after installation.
 
-   ```bash
-   # Spins up a Grafana instance first that we tests against
-   npm run server
+### Manual Download
 
-   # If you wish to start a certain Grafana version. If not specified will use latest by default
-   GRAFANA_VERSION=11.3.0 npm run server
+1. Download the latest release from [GitHub Releases](https://github.com/tim0-12432/calendar-heatmap-panel/releases).
+2. Extract the archive into your Grafana plugins directory:
+   - Linux/Docker: `/var/lib/grafana/plugins/`
+   - Windows: `data/plugins/`
+3. Restart Grafana and verify under **Administration → Plugins**.
 
-   # Starts the tests
-   npm run e2e
-   ```
+### Development Install (from source)
 
-7. Run the linter
+```bash
+git clone https://github.com/tim0-12432/calendar-heatmap-panel.git
+cd calendar-heatmap-panel
+npm install
+npm run build
+# Copy dist/ to your Grafana plugins directory
+```
 
-   ```bash
-   npm run lint
+## 📖 Getting Started
 
-   # or
+1. **Create a panel** and select **Calendar Heatmap Panel**.
+2. **Add a query** returning a timestamp field and numeric value.
+3. **Choose aggregation** (Sum/Count/Avg/Max/Min) for days with multiple points.
+4. **Customize appearance**: color scheme, cell size/spacing, labels, legend, and tooltips.
 
-   npm run lint:fix
-   ```
+### Example Queries
 
-# Distributing your plugin
+#### PostgreSQL – Daily Signups
 
-When distributing a Grafana plugin either within the community or privately the plugin must be signed so the Grafana application can verify its authenticity. This can be done with the `@grafana/sign-plugin` package.
+```sql
+SELECT
+  date_trunc('day', created_at) AS time,
+  COUNT(*) AS value
+FROM users
+WHERE $__timeFilter(created_at)
+GROUP BY 1
+ORDER BY 1;
+```
 
-_Note: It's not necessary to sign a plugin during development. The docker development environment that is scaffolded with `@grafana/create-plugin` caters for running the plugin without a signature._
+#### MySQL – Revenue per Day
 
-## Initial steps
+```sql
+SELECT
+  DATE(order_date) AS time,
+  SUM(total_amount) AS value
+FROM orders
+WHERE $__timeFilter(order_date)
+GROUP BY DATE(order_date)
+ORDER BY DATE(order_date);
+```
 
-Before signing a plugin please read the Grafana [plugin publishing and signing criteria](https://grafana.com/legal/plugins/#plugin-publishing-and-signing-criteria) documentation carefully.
+#### Microsoft SQL Server – Error Incidents
 
-`@grafana/create-plugin` has added the necessary commands and workflows to make signing and distributing a plugin via the grafana plugins catalog as straightforward as possible.
+```sql
+SELECT
+  CAST(timestamp AS date) AS time,
+  COUNT(*) AS value
+FROM logs
+WHERE $__timeFilter(timestamp) AND level = 'Error'
+GROUP BY CAST(timestamp AS date)
+ORDER BY CAST(timestamp AS date);
+```
 
-Before signing a plugin for the first time please consult the Grafana [plugin signature levels](https://grafana.com/legal/plugins/#what-are-the-different-classifications-of-plugins) documentation to understand the differences between the types of signature level.
+#### BigQuery – Sessions per Day
 
-1. Create a [Grafana Cloud account](https://grafana.com/signup).
-2. Make sure that the first part of the plugin ID matches the slug of your Grafana Cloud account.
-   - _You can find the plugin ID in the `plugin.json` file inside your plugin directory. For example, if your account slug is `acmecorp`, you need to prefix the plugin ID with `acmecorp-`._
-3. Create a Grafana Cloud API key with the `PluginPublisher` role.
-4. Keep a record of this API key as it will be required for signing a plugin
+```sql
+SELECT
+  DATE(session_start) AS time,
+  COUNT(*) AS value
+FROM `project.dataset.sessions`
+WHERE session_start BETWEEN $__timeFrom() AND $__timeTo()
+GROUP BY 1
+ORDER BY 1;
+```
 
-## Signing a plugin
+#### ClickHouse – Requests per Day
 
-### Using Github actions release workflow
+```sql
+SELECT
+  toDate(timestamp) AS time,
+  count() AS value
+FROM requests
+WHERE timestamp BETWEEN $__timeFrom() AND $__timeTo()
+GROUP BY toDate(timestamp)
+ORDER BY toDate(timestamp);
+```
 
-If the plugin is using the github actions supplied with `@grafana/create-plugin` signing a plugin is included out of the box. The [release workflow](./.github/workflows/release.yml) can prepare everything to make submitting your plugin to Grafana as easy as possible. Before being able to sign the plugin however a secret needs adding to the Github repository.
+## ⚙️ Configuration Reference
 
-1. Please navigate to "settings > secrets > actions" within your repo to create secrets.
-2. Click "New repository secret"
-3. Name the secret "GRAFANA_API_KEY"
-4. Paste your Grafana Cloud API key in the Secret field
-5. Click "Add secret"
+### Display Options
 
-#### Push a version tag
+| Option          | Type    | Default | Description                                      |
+| --------------- | ------- | ------- | ------------------------------------------------ |
+| Color Scheme    | Select  | `green` | Palette for cell intensity                       |
+| Auto Size Cells | Boolean | `true`  | Fit cells to available width                     |
+| Cell Size       | Number  | `12`    | Cell size in pixels (8–20) when auto-size is off |
+| Cell Spacing    | Number  | `2`     | Gap between cells in pixels (1–24)               |
+| Border Radius   | Number  | `2`     | Corner radius in pixels (0–6)                    |
 
-To trigger the workflow we need to push a version tag to github. This can be achieved with the following steps:
+### Label & Legend Options
 
-1. Run `npm version <major|minor|patch>`
-2. Run `git push origin main --follow-tags`
+| Option            | Type    | Default | Description                       |
+| ----------------- | ------- | ------- | --------------------------------- |
+| Show Week Labels  | Boolean | `true`  | Display weekday labels (Mon–Sun)  |
+| Show Month Labels | Boolean | `true`  | Display month headers             |
+| Show Legend       | Boolean | `true`  | Show legend for color intensities |
 
-## Learn more
+### Data Options
 
-Below you can find source code for existing app plugins and other related documentation.
+| Option             | Type    | Default | Description                                      |
+| ------------------ | ------- | ------- | ------------------------------------------------ |
+| Aggregation Method | Select  | `sum`   | Sum, Count, Average, Maximum, or Minimum per day |
+| Show Tooltip       | Boolean | `true`  | Enable tooltips with date and value              |
 
-- [Basic panel plugin example](https://github.com/grafana/grafana-plugin-examples/tree/master/examples/panel-basic#readme)
-- [`plugin.json` documentation](https://grafana.com/developers/plugin-tools/reference/plugin-json)
-- [How to sign a plugin?](https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin)
+### Color Schemes
+
+| Scheme | Description          | Typical Uses               |
+| ------ | -------------------- | -------------------------- |
+| Green  | Classic GitHub style | Activity, growth, success  |
+| Blue   | Calm and neutral     | Performance, efficiency    |
+| Red    | High-attention       | Errors, incidents          |
+| Yellow | Bright and energetic | Warnings, energy metrics   |
+| Purple | Distinctive accent   | Creative or custom metrics |
+| Orange | Warm and inviting    | Engagement, user activity  |
+
+### Aggregation Methods
+
+| Method  | Description              | Best For             |
+| ------- | ------------------------ | -------------------- |
+| Sum     | Adds all values in a day | Counters, totals     |
+| Count   | Counts data points       | Event frequency      |
+| Average | Mean of values           | Performance metrics  |
+| Maximum | Highest value            | Peaks and capacity   |
+| Minimum | Lowest value             | Baselines and minima |
+
+## 🎯 Use Cases
+
+- **DevOps & SRE**: Deploy frequency, error spikes, incident density, build successes.
+- **Product Analytics**: Daily active users, feature usage, retention pulses.
+- **Business KPIs**: Revenue, orders, signups, churn signals by day.
+- **Security & Compliance**: Auth failures, firewall denies, audit trail volume.
+- **Infrastructure**: CPU throttling events, network errors, database slow queries.
+
+### SQL Patterns by Use Case
+
+- **Deployment Frequency (PostgreSQL):**
+  ```sql
+  SELECT date_trunc('day', deployed_at) AS time, COUNT(*) AS value
+  FROM deployments
+  WHERE $__timeFilter(deployed_at)
+  GROUP BY 1
+  ORDER BY 1;
+  ```
+- **DAU (MySQL):**
+  ```sql
+  SELECT DATE(event_time) AS time, COUNT(DISTINCT user_id) AS value
+  FROM events
+  WHERE $__timeFilter(event_time)
+  GROUP BY DATE(event_time)
+  ORDER BY DATE(event_time);
+  ```
+- **Security Incidents (SQL Server):**
+  ```sql
+  SELECT CAST(happened_at AS date) AS time, COUNT(*) AS value
+  FROM security_incidents
+  WHERE $__timeFilter(happened_at)
+  GROUP BY CAST(happened_at AS date)
+  ORDER BY CAST(happened_at AS date);
+  ```
+
+## 🛠️ Development
+
+### Prerequisites
+
+- Node.js 22+
+- npm (bundled with Node 22)
+- Docker (for running Grafana locally via `npm run server`)
+
+### Setup
+
+```bash
+npm install
+npm run dev           # Hot reload for plugin code
+npm run server        # Launch Grafana in Docker with the plugin mounted
+```
+
+### Scripts
+
+```bash
+npm run dev          # Start Vite/webpack dev workflow (hot reload)
+npm run build        # Production build
+npm run lint         # ESLint
+npm run lint:fix     # Autofix lint issues
+npm run typecheck    # TypeScript type checking
+npm run test         # Unit tests (watch)
+npm run test:ci      # Unit tests (CI mode)
+npm run e2e          # Playwright end-to-end tests
+npm run sign         # Sign plugin for distribution
+```
+
+### Packaging & Signing
+
+1. Run `npm run build` to generate `dist/`.
+2. Run `npm run sign` with your Grafana signature credentials configured.
+3. Copy or publish the signed bundle according to Grafana plugin distribution guidelines.
+
+### Development Tips
+
+- Keep data processing pure and memoized (`useMemo`, `useCallback`).
+- Validate data frames: require one time field and one numeric field.
+- Test in both light and dark themes for color contrast.
+- Prefer aggregation on the data source when possible to reduce payload size.
+
+## 🧭 Support
+
+- **Issues & Bugs:** [GitHub Issues](https://github.com/tim0-12432/calendar-heatmap-panel/issues)
+- **Feature Requests:** [GitHub Issues](https://github.com/tim0-12432/calendar-heatmap-panel/issues)
+- **Author:** [Tim0 12432](https://github.com/tim0-12432)
+
+## 📄 License
+
+Licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+
+---
+
+Enjoy the Calendar Heatmap Panel! If it helps you, consider starring the repository.
