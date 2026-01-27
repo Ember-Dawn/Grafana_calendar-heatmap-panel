@@ -48,7 +48,7 @@ A Grafana panel plugin that renders time-series data as an interactive calendar 
 
 ### Grafana Catalog (recommended)
 
-_Plugin is pending Grafana catalog publication. Use manual installation until approved._
+[![grafana plugin catalog](./doc/plugin-catalog.png)](https://grafana.com/grafana/plugins/all-plugins/?search=calendar)
 
 ### Grafana CLI
 
