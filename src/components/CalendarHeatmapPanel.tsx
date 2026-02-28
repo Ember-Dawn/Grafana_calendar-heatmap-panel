@@ -104,16 +104,89 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
     return Math.max(1, Math.ceil((diffDays + 1) / 7));
   }, [shiftedStartDate, shiftedEndDate]);
 
-  const computedRectSize = useMemo(() => {
-    if (!options.autoRectSize) {
-      return options.rectSize;
-    }
 
-    const leftPad = options.showWeekLabels ? 28 : 5;
-    const usable = Math.max(0, availableWidth - leftPad);
-    const raw = Math.floor(usable / weekCount) - options.space;
-    return Math.max(4, Math.min(24, raw));
-  }, [options.autoRectSize, options.rectSize, options.showWeekLabels, options.space, availableWidth, weekCount]);
+
+
+
+
+
+
+
+
+// 统一维护 legend 相关尺寸：legendOffset 和 styles.legend 共用同一份常量
+const LEGEND_LAYOUT = {
+  marginTop: 10,
+  paddingBottom: 10,
+  // 没有显式 line-height 时，用一个推导值（你也可以改成 Math.ceil(fontSize * 1.35)）
+  inferredLineHeight: 14,
+  // 手动微调：挡住就 +2/+4；留白太多就 -2
+  fudgePx: 0,
+};
+
+
+const legendOffset = options.showLegend
+  ? LEGEND_LAYOUT.marginTop + LEGEND_LAYOUT.paddingBottom + LEGEND_LAYOUT.inferredLineHeight + LEGEND_LAYOUT.fudgePx
+  : 0;
+
+
+// 计算 rectSize：宽度自适应 + 高度自动约束，并留一个变量可手动微调
+const computedRectSize = useMemo(() => {
+  if (!options.autoRectSize) {
+    return options.rectSize;
+  }
+
+  // 1) width constraint（原逻辑）
+  const leftPad = options.showWeekLabels ? 28 : 5;
+  const usableW = Math.max(0, availableWidth - leftPad);
+  const rawByWidth = Math.floor(usableW / weekCount) - options.space;
+
+  // 2) height constraint（自动计算，不写死 monthPad/safety）
+  // HeatMap 实际可用高度（与你传给 <HeatMap height={...}/> 保持一致）
+  const heatmapHeight = Math.max(0, height - legendOffset);
+
+  // 关键：月标签/字体/基线/主题差异等，���法在不测量 DOM 的情况下 100% 精确推导
+  // 这里采用“基于 fontSize 的推导”，再提供一个手动微调项
+  const monthLabelFontSize = 12; // 你在 CSS 里 text[data-size] 用的是 12px
+  const inferredMonthLabelLineHeight = Math.ceil(monthLabelFontSize * 1.35); // 自动推导一行文本高度
+  const inferredTopLabelsHeight = options.showMonthLabels ? inferredMonthLabelLineHeight : 0;
+
+  // 手动微调（你只需要改这个值来测试：0 / 2 / 4 / 6 / 8 / 10 ...）
+  const heightFudgePx = 0;
+
+  const usableH = Math.max(0, heatmapHeight - inferredTopLabelsHeight - heightFudgePx);
+
+  // 7 行日历 + 行间 6 个 gap
+  const rawByHeight = Math.floor((usableH - 6 * options.space) / 7);
+
+  const raw = Math.min(rawByWidth, rawByHeight);
+  return Math.max(4, Math.min(24, raw));
+}, [
+  options.autoRectSize,
+  options.rectSize,
+  options.showWeekLabels,
+  options.showMonthLabels,
+  options.space,
+  availableWidth,
+  weekCount,
+  height,
+  legendOffset,
+]);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const weekLabels = useMemo(() => {
     if (!options.showWeekLabels) {
@@ -205,8 +278,8 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      // justify-content: flex-start;
+      // justify-content: center;
+      justify-content: flex-start;
       overflow: auto;
       padding: 1px;
     `,
@@ -234,8 +307,8 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
       display: flex;
       align-items: center;
       gap: 4px;
-      margin-top: 10px;
-      padding-bottom: 10px;
+      margin-top: ${LEGEND_LAYOUT.marginTop}px;
+      padding-bottom: ${LEGEND_LAYOUT.paddingBottom}px;
       font-size: 11px;
       color: ${theme.colors.text.secondary};
     `,
@@ -260,7 +333,7 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
   }
 
   /* legend 隐藏时，不要预留固定高度。而且显示legend时，legend下面的留白 */
-  const legendOffset = options.showLegend ? 10 : 0;
+  // const legendOffset = options.showLegend ? 10 : 0;
 
   return (
     <div className={styles.container}>
