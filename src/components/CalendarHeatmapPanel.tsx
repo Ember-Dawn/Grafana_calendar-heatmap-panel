@@ -273,29 +273,29 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
         space={options.space}
         radius={options.radius}
         legendCellSize={0}
-        weekLabels={options.showWeekLabels ? [
-          t('panel.component.weekLabels.sun', 'Sun'),
-          t('panel.component.weekLabels.mon', 'Mon'),
-          t('panel.component.weekLabels.tue', 'Tue'),
-          t('panel.component.weekLabels.wed', 'Wed'),
-          t('panel.component.weekLabels.thu', 'Thu'),
-          t('panel.component.weekLabels.fri', 'Fri'),
-          t('panel.component.weekLabels.sat', 'Sat'),
-        ] : false}
-        monthLabels={options.showMonthLabels ? [
-          t('panel.component.monthLabels.jan', 'Jan'),
-          t('panel.component.monthLabels.feb', 'Feb'),
-          t('panel.component.monthLabels.mar', 'Mar'),
-          t('panel.component.monthLabels.apr', 'Apr'),
-          t('panel.component.monthLabels.may', 'May'),
-          t('panel.component.monthLabels.jun', 'Jun'),
-          t('panel.component.monthLabels.jul', 'Jul'),
-          t('panel.component.monthLabels.aug', 'Aug'),
-          t('panel.component.monthLabels.sep', 'Sep'),
-          t('panel.component.monthLabels.oct', 'Oct'),
-          t('panel.component.monthLabels.nov', 'Nov'),
-          t('panel.component.monthLabels.dec', 'Dec'),
-        ] : false}
+        // weekLabels={options.showWeekLabels ? [
+        //   t('panel.component.weekLabels.sun', 'Sun'),
+        //   t('panel.component.weekLabels.mon', 'Mon'),
+        //   t('panel.component.weekLabels.tue', 'Tue'),
+        //   t('panel.component.weekLabels.wed', 'Wed'),
+        //   t('panel.component.weekLabels.thu', 'Thu'),
+        //   t('panel.component.weekLabels.fri', 'Fri'),
+        //   t('panel.component.weekLabels.sat', 'Sat'),
+        // ] : false}
+        // monthLabels={options.showMonthLabels ? [
+        //   t('panel.component.monthLabels.jan', 'Jan'),
+        //   t('panel.component.monthLabels.feb', 'Feb'),
+        //   t('panel.component.monthLabels.mar', 'Mar'),
+        //   t('panel.component.monthLabels.apr', 'Apr'),
+        //   t('panel.component.monthLabels.may', 'May'),
+        //   t('panel.component.monthLabels.jun', 'Jun'),
+        //   t('panel.component.monthLabels.jul', 'Jul'),
+        //   t('panel.component.monthLabels.aug', 'Aug'),
+        //   t('panel.component.monthLabels.sep', 'Sep'),
+        //   t('panel.component.monthLabels.oct', 'Oct'),
+        //   t('panel.component.monthLabels.nov', 'Nov'),
+        //   t('panel.component.monthLabels.dec', 'Dec'),
+        // ] : false}
         weekLabels={weekLabels}
         monthLabels={monthLabels}
         panelColors={colors}
