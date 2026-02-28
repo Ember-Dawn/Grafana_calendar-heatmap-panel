@@ -117,6 +117,36 @@ export const plugin = new PanelPlugin<CalendarHeatmapOptions>(
         },
       })
 
+// Start day of week setting (use radio to avoid select-focus issues)
+.addRadio({
+  path: 'weekStart',
+  name: t('panel.options.weekStart.name', 'Week starts on'),
+  description: t('panel.options.weekStart.description', 'Choose whether the week starts on Sunday or Monday'),
+  defaultValue: 'sunday',
+  category: ['Layout'],
+  settings: {
+    options: [
+      { value: 'sunday', label: t('panel.options.weekStart.options.sunday', 'Sunday') },
+      { value: 'monday', label: t('panel.options.weekStart.options.monday', 'Monday') },
+    ],
+  },
+})
+
+    //   // Start day of week setting
+    // .addSelect({
+    //   path: 'weekStart',
+    //   name: t('panel.options.weekStart.name', 'Week starts on'),
+    //   description: t('panel.options.weekStart.description', 'Choose whether the week starts on Sunday or Monday'),
+    //   defaultValue: 'sunday',
+    //   category: ['Layout'],
+    //   settings: {
+    //     options: [
+    //       { value: 'sunday', label: t('panel.options.weekStart.options.sunday', 'Sunday') },
+    //       { value: 'monday', label: t('panel.options.weekStart.options.monday', 'Monday') },
+    //     ],
+    //   },
+    // })
+
       // Interaction
       .addBooleanSwitch({
         path: 'showTooltip',

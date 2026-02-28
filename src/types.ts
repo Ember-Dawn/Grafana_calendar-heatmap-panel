@@ -13,7 +13,10 @@ export interface CalendarHeatmapOptions {
   showWeekLabels: boolean;
   showMonthLabels: boolean;
   showLegend: boolean;
-  
+
+  /** Start day of week for layout/labels */
+  weekStart: 'sunday' | 'monday';
+
   // Data
   aggregation: 'sum' | 'count' | 'avg' | 'max' | 'min';
   
@@ -25,3 +28,4 @@ export interface HeatmapValue {
   date: string;
   count: number;
 }
+
