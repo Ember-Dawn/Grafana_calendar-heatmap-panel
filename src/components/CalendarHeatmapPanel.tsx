@@ -205,14 +205,15 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
       display: flex;
       flex-direction: column;
       align-items: center;
-      // justify-content: center;
-      justify-content: flex-start;
+      justify-content: center;
+      // justify-content: flex-start;
       overflow: auto;
-      padding: 16px;
+      padding: 1px;
     `,
     heatmap: css`
       /* 关于热力图上面的空白，轻微上移：建议从 6~12px 试 */
-      margin-top: -20px;
+      margin-top: -5px;
+      // width: 100%;
       
       /* @uiw/react-heat-map sets inline color: var(--rhm-text-color, ...) */
       --rhm-text-color: ${theme.colors.text.secondary};
@@ -233,7 +234,8 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
       display: flex;
       align-items: center;
       gap: 4px;
-      margin-top: 12px;
+      margin-top: 10px;
+      padding-bottom: 10px;
       font-size: 11px;
       color: ${theme.colors.text.secondary};
     `,
