@@ -37,7 +37,30 @@ export interface CalendarHeatmapOptions {
 
   // Interaction
   showTooltip: boolean;
+
+
+  // -----------------------
+  // NEW: Bucketing / Levels
+  // -----------------------
+
+  bucketMode: 'auto' | 'custom';
+
+  /**
+   * Values < minColoredValue are treated as empty (blank).
+   * Requirement: empty is [0, minColoredValue), and >= minColoredValue is colored.
+   */
+  minColoredValue: number;
+
+  /**
+   * Custom bucket edges for bucketMode=custom.
+   * Must be 4 numbers, strictly increasing, and include 0.
+   * Example: "0,1,2,9"
+   */
+  customBuckets: string;
 }
+
+
+
 
 export interface HeatmapValue {
   date: string;

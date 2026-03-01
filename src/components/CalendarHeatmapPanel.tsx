@@ -3,7 +3,7 @@ import { PanelProps } from '@grafana/data';
 import { useTheme2, Tooltip } from '@grafana/ui';
 import HeatMap from '@uiw/react-heat-map';
 import { CalendarHeatmapOptions, HeatmapValue } from '../types';
-import { processTimeSeriesData, getColorPalette } from '../utils/dataProcessor';
+import { processTimeSeriesData, getColorPalette, getLegendColors } from '../utils/dataProcessor';
 import { css } from '@emotion/css';
 import { t } from '@grafana/i18n';
 
@@ -50,14 +50,7 @@ function rotateWeek(labelsSunFirst: string[], weekStart: 'sunday' | 'monday'): s
   return weekStart === 'monday' ? [...labelsSunFirst.slice(1), labelsSunFirst[0]] : labelsSunFirst;
 }
 
-export const CalendarHeatmapPanel: React.FC<Props> = ({
-  data,
-  width,
-  height,
-  options,
-  timeRange,
-  timeZone,
-}) => {
+export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, options, timeRange, timeZone }) => {
   const theme = useTheme2();
 
   const heatmapData = useMemo(() => {
@@ -106,100 +99,61 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({
     return Math.max(1, Math.ceil((diffDays + 1) / 7));
   }, [shiftedStartDate, shiftedEndDate]);
 
+  // 统一维护 legend 相关尺寸：legendOffset 和 styles.legend 共用同一份常量
+  const LEGEND_LAYOUT = {
+    marginTop: 10,
+    paddingBottom: 10,
+    inferredLineHeight: 14,
+    fudgePx: 0,
+  };
 
+  const legendOffset = options.showLegend
+    ? LEGEND_LAYOUT.marginTop + LEGEND_LAYOUT.paddingBottom + LEGEND_LAYOUT.inferredLineHeight + LEGEND_LAYOUT.fudgePx
+    : 0;
 
+  // 计算 rectSize：宽度自适应 + 高度自动约束，并留一个变量可手动微调
+  const computedRectSize = useMemo(() => {
+    if (!options.autoRectSize) {
+      return options.rectSize;
+    }
 
+    const leftPad = options.showWeekLabels ? 28 : 5;
+    const usableW = Math.max(0, availableWidth - leftPad);
+    const rawByWidth = Math.floor(usableW / weekCount) - options.space;
 
+    const heatmapHeight = Math.max(0, height - legendOffset);
 
+    const monthLabelFontSize = 12;
+    const inferredMonthLabelLineHeight = Math.ceil(monthLabelFontSize * 1.35);
+    const inferredTopLabelsHeight = options.showMonthLabels ? inferredMonthLabelLineHeight : 0;
 
+    const heightFudgePx = 0;
+    const usableH = Math.max(0, heatmapHeight - inferredTopLabelsHeight - heightFudgePx);
 
+    const rawByHeight = Math.floor((usableH - 6 * options.space) / 7);
 
-
-// 统一维护 legend 相关尺寸：legendOffset 和 styles.legend 共用同一份常量
-const LEGEND_LAYOUT = {
-  marginTop: 10,
-  paddingBottom: 10,
-  // 没有显式 line-height 时，用一个推导值（你也可以改成 Math.ceil(fontSize * 1.35)）
-  inferredLineHeight: 14,
-  // 手动微调：挡住就 +2/+4；留白太多就 -2
-  fudgePx: 0,
-};
-
-
-const legendOffset = options.showLegend
-  ? LEGEND_LAYOUT.marginTop + LEGEND_LAYOUT.paddingBottom + LEGEND_LAYOUT.inferredLineHeight + LEGEND_LAYOUT.fudgePx
-  : 0;
-
-
-// 计算 rectSize：宽度自适应 + 高度自动约束，并留一个变量可手动微调
-const computedRectSize = useMemo(() => {
-  if (!options.autoRectSize) {
-    return options.rectSize;
-  }
-
-  // 1) width constraint（原逻辑）
-  const leftPad = options.showWeekLabels ? 28 : 5;
-  const usableW = Math.max(0, availableWidth - leftPad);
-  const rawByWidth = Math.floor(usableW / weekCount) - options.space;
-
-  // 2) height constraint（自动计算，不写死 monthPad/safety）
-  // HeatMap 实际可用高度（与你传给 <HeatMap height={...}/> 保持一致）
-  const heatmapHeight = Math.max(0, height - legendOffset);
-
-  // 关键：月标签/字体/基线/主题差异等，���法在不测量 DOM 的情况下 100% 精确推导
-  // 这里采用“基于 fontSize 的推导”，再提供一个手动微调项
-  const monthLabelFontSize = 12; // 你在 CSS 里 text[data-size] 用的是 12px
-  const inferredMonthLabelLineHeight = Math.ceil(monthLabelFontSize * 1.35); // 自动推导一行文本高度
-  const inferredTopLabelsHeight = options.showMonthLabels ? inferredMonthLabelLineHeight : 0;
-
-  // 手动微调（你只需要改这个值来测试：0 / 2 / 4 / 6 / 8 / 10 ...）
-  const heightFudgePx = 0;
-
-  const usableH = Math.max(0, heatmapHeight - inferredTopLabelsHeight - heightFudgePx);
-
-  // 7 行日历 + 行间 6 个 gap
-  const rawByHeight = Math.floor((usableH - 6 * options.space) / 7);
-
-  const raw = Math.min(rawByWidth, rawByHeight);
-  return Math.max(4, Math.min(24, raw));
-}, [
-  options.autoRectSize,
-  options.rectSize,
-  options.showWeekLabels,
-  options.showMonthLabels,
-  options.space,
-  availableWidth,
-  weekCount,
-  height,
-  legendOffset,
-]);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    const raw = Math.min(rawByWidth, rawByHeight);
+    return Math.max(4, Math.min(24, raw));
+  }, [
+    options.autoRectSize,
+    options.rectSize,
+    options.showWeekLabels,
+    options.showMonthLabels,
+    options.space,
+    availableWidth,
+    weekCount,
+    height,
+    legendOffset,
+  ]);
 
   const weekLabels = useMemo(() => {
     if (!options.showWeekLabels) {
       return false as const;
     }
 
-    // 1) Build base labels in Sun..Sat order
     let labelsSunFirst: string[] | null = null;
 
     if (options.weekLabelMode === 'number') {
-      // Sun..Sat => 1..7 (then rotate by weekStart)
       labelsSunFirst = ['1', '2', '3', '4', '5', '6', '7'];
     } else if (options.weekLabelMode === 'custom') {
       const custom = splitCsv(options.weekLabelCustom);
@@ -207,7 +161,6 @@ const computedRectSize = useMemo(() => {
     }
 
     if (!labelsSunFirst) {
-      // default (Sun..Sat)
       labelsSunFirst = [
         t('panel.component.weekLabels.sun', 'Sun'),
         t('panel.component.weekLabels.mon', 'Mon'),
@@ -219,14 +172,8 @@ const computedRectSize = useMemo(() => {
       ];
     }
 
-    // 2) Rotate for weekStart (Monday-first => Mon..Sun)
     return rotateWeek(labelsSunFirst, options.weekStart);
-  }, [
-    options.showWeekLabels,
-    options.weekStart,
-    options.weekLabelMode,
-    options.weekLabelCustom,
-  ]);
+  }, [options.showWeekLabels, options.weekStart, options.weekLabelMode, options.weekLabelCustom]);
 
   const monthLabels = useMemo(() => {
     if (!options.showMonthLabels) {
@@ -242,10 +189,8 @@ const computedRectSize = useMemo(() => {
       if (custom.length === 12) {
         return custom;
       }
-      // fall through to default if invalid
     }
 
-    // default
     return [
       t('panel.component.monthLabels.jan', 'Jan'),
       t('panel.component.monthLabels.feb', 'Feb'),
@@ -270,8 +215,19 @@ const computedRectSize = useMemo(() => {
   }, [heatmapData]);
 
   const colors = useMemo(() => {
-    return getColorPalette(options.colorScheme, theme, maxValue, options.customColor);
-  }, [options.colorScheme, theme, maxValue, options.customColor]);
+    return getColorPalette(
+      options.colorScheme,
+      theme,
+      maxValue,
+      options.customColor,
+      options.bucketMode,
+      options.customBuckets
+    );
+  }, [options.colorScheme, theme, maxValue, options.customColor, options.bucketMode, options.customBuckets]);
+
+  const legendColors = useMemo(() => {
+    return getLegendColors(options.colorScheme, theme, options.customColor);
+  }, [options.colorScheme, theme, options.customColor]);
 
   const styles = {
     container: css`
@@ -280,17 +236,12 @@ const computedRectSize = useMemo(() => {
       display: flex;
       flex-direction: column;
       align-items: center;
-      // justify-content: center;
       justify-content: flex-start;
       overflow: auto;
       padding: 1px;
     `,
     heatmap: css`
-      /* 关于热力图上面的空白，轻微上移：建议从 6~12px 试 */
       margin-top: -5px;
-      // width: 100%;
-      
-      /* @uiw/react-heat-map sets inline color: var(--rhm-text-color, ...) */
       --rhm-text-color: ${theme.colors.text.secondary};
 
       .w-heatmap-week {
@@ -326,16 +277,12 @@ const computedRectSize = useMemo(() => {
   };
 
   if (data.series.length === 0) {
-    
     return (
       <div className={styles.container}>
         <span className={styles.noData}>{t('panel.component.noData', 'No data available')}</span>
       </div>
     );
   }
-
-  /* legend 隐藏时，不要预留固定高度。而且显示legend时，legend下面的留白 */
-  // const legendOffset = options.showLegend ? 10 : 0;
 
   return (
     <div className={styles.container}>
@@ -350,39 +297,15 @@ const computedRectSize = useMemo(() => {
         space={options.space}
         radius={options.radius}
         legendCellSize={0}
-        // weekLabels={options.showWeekLabels ? [
-        //   t('panel.component.weekLabels.sun', 'Sun'),
-        //   t('panel.component.weekLabels.mon', 'Mon'),
-        //   t('panel.component.weekLabels.tue', 'Tue'),
-        //   t('panel.component.weekLabels.wed', 'Wed'),
-        //   t('panel.component.weekLabels.thu', 'Thu'),
-        //   t('panel.component.weekLabels.fri', 'Fri'),
-        //   t('panel.component.weekLabels.sat', 'Sat'),
-        // ] : false}
-        // monthLabels={options.showMonthLabels ? [
-        //   t('panel.component.monthLabels.jan', 'Jan'),
-        //   t('panel.component.monthLabels.feb', 'Feb'),
-        //   t('panel.component.monthLabels.mar', 'Mar'),
-        //   t('panel.component.monthLabels.apr', 'Apr'),
-        //   t('panel.component.monthLabels.may', 'May'),
-        //   t('panel.component.monthLabels.jun', 'Jun'),
-        //   t('panel.component.monthLabels.jul', 'Jul'),
-        //   t('panel.component.monthLabels.aug', 'Aug'),
-        //   t('panel.component.monthLabels.sep', 'Sep'),
-        //   t('panel.component.monthLabels.oct', 'Oct'),
-        //   t('panel.component.monthLabels.nov', 'Nov'),
-        //   t('panel.component.monthLabels.dec', 'Dec'),
-        // ] : false}
         weekLabels={weekLabels}
         monthLabels={monthLabels}
         panelColors={colors}
         rectRender={(props, cell) => {
-          // Convert rendered cell date back to original date for correct tooltip/value
           const renderedDate = parseAnyYMD(cell.date);
           let originalKey = String(cell.date);
 
           if (renderedDate) {
-            const originalDate = addDays(renderedDate, -renderShiftDays); // reverse shift
+            const originalDate = addDays(renderedDate, -renderShiftDays);
             originalKey = toKey(originalDate);
           } else {
             originalKey = String(cell.date).replace(/-/g, '/');
@@ -410,19 +333,25 @@ const computedRectSize = useMemo(() => {
       {options.showLegend && (
         <div className={styles.legend}>
           <span>{t('panel.component.legend.less', 'Less')}</span>
-          {Object.entries(colors)
-            .map(([key, color]) => [Number(key), color] as const)
-            .filter(([key]) => !Number.isNaN(key) && key !== 1)
-            .sort(([a], [b]) => a - b)
-            .map(([key, color]) => (
+
+          {legendColors.map((color, idx) => {
+            const title =
+              idx === 0
+                ? t('panel.component.legend.tooltip.empty', 'Empty')
+                : t('panel.component.legend.tooltip.level', 'Level {{level}}', { level: idx });
+
+            return (
               <div
-                key={key}
+                key={idx}
                 className={styles.legendRect}
                 style={{ backgroundColor: color }}
-                title={t('panel.component.legend.tooltip', 'Level {{level}}', { level: key })}
+                title={title}
               />
-            ))}
+            );
+          })}
+
           <span>{t('panel.component.legend.more', 'More')}</span>
+
           {maxValue > 0 && (
             <span style={{ marginLeft: 8 }}>
               ({t('panel.component.legend.max', 'Max')}: {maxValue.toLocaleString()})
