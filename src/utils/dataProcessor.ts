@@ -1,9 +1,13 @@
-import { DataFrame, FieldType, GrafanaTheme2 } from '@grafana/data';
+import { DataFrame, FieldType, GrafanaTheme2, dateTime, dateTimeFormat } from '@grafana/data';
 import { HeatmapValue } from '../types';
 
 type Aggregation = 'sum' | 'count' | 'avg' | 'max' | 'min';
 
-export function processTimeSeriesData(series: DataFrame[], aggregation: Aggregation): HeatmapValue[] {
+export function processTimeSeriesData(
+  series: DataFrame[],
+  aggregation: Aggregation,
+  timeZone?: string
+): HeatmapValue[] {
   const dailyData = new Map<string, number[]>();
 
   // Iterate through all data frames
@@ -15,7 +19,7 @@ export function processTimeSeriesData(series: DataFrame[], aggregation: Aggregat
       continue;
     }
 
-    // Group values by date
+    // Group values by date (using Grafana timezone passed from panel props)
     for (let i = 0; i < frame.length; i++) {
       const timestamp = timeField.values[i];
       const value = valueField.values[i];
@@ -24,7 +28,11 @@ export function processTimeSeriesData(series: DataFrame[], aggregation: Aggregat
         continue;
       }
 
-      const date = formatDate(new Date(timestamp));
+      // IMPORTANT: pass Grafana's timezone so day-bucketing follows dashboard/user settings
+      const date = dateTimeFormat(dateTime(timestamp), {
+        format: 'YYYY/MM/DD',
+        timeZone,
+      });
 
       if (!dailyData.has(date)) {
         dailyData.set(date, []);
@@ -66,13 +74,6 @@ function aggregate(values: number[], method: Aggregation): number {
     default:
       return values.reduce((a, b) => a + b, 0);
   }
-}
-
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}/${month}/${day}`;
 }
 
 // --------------------
@@ -146,7 +147,6 @@ function buildCustomLevels(base: RGB, theme: GrafanaTheme2): string[] {
     rgbToCss(mix(base, black, 0.35)),
   ];
 
-  // Keep behavior aligned with existing logic:
   // reverse in dark mode for perceived contrast
   return theme.isDark ? [...levels].reverse() : levels;
 }

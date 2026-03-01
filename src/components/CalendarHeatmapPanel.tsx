@@ -29,7 +29,6 @@ function parseAnyYMD(dateStr: string): Date | null {
   return new Date(y, m - 1, d);
 }
 
-/** Must match dataProcessor.ts formatDate(): YYYY/MM/DD */
 function toKey(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -45,21 +44,25 @@ function splitCsv(input: string): string[] {
 }
 
 function rotateWeek(labelsSunFirst: string[], weekStart: 'sunday' | 'monday'): string[] {
-  // Input is always Sun..Sat
   if (labelsSunFirst.length !== 7) {
     return labelsSunFirst;
   }
-  return weekStart === 'monday'
-    ? [...labelsSunFirst.slice(1), labelsSunFirst[0]] // Mon..Sat + Sun
-    : labelsSunFirst; // Sun..Sat
+  return weekStart === 'monday' ? [...labelsSunFirst.slice(1), labelsSunFirst[0]] : labelsSunFirst;
 }
 
-export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, options, timeRange }) => {
+export const CalendarHeatmapPanel: React.FC<Props> = ({
+  data,
+  width,
+  height,
+  options,
+  timeRange,
+  timeZone,
+}) => {
   const theme = useTheme2();
 
   const heatmapData = useMemo(() => {
-    return processTimeSeriesData(data.series, options.aggregation);
-  }, [data.series, options.aggregation]);
+    return processTimeSeriesData(data.series, options.aggregation, timeZone);
+  }, [data.series, options.aggregation, timeZone]);
 
   const countByOriginalDate = useMemo(() => {
     const m = new Map<string, number>();
@@ -71,7 +74,6 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
 
   const rawStartDate = useMemo(() => new Date(timeRange.from.valueOf()), [timeRange.from]);
   const rawEndDate = useMemo(() => new Date(timeRange.to.valueOf()), [timeRange.to]);
-
   const availableWidth = useMemo(() => Math.max(0, width - 32), [width]);
 
   // Monday-first: shift render dates by -1 day to rotate weekday rows so Sunday becomes last
