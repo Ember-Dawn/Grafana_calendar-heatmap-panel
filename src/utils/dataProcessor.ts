@@ -38,6 +38,13 @@ export function processTimeSeriesData(series: DataFrame[], aggregation: Aggregat
 
   dailyData.forEach((values, date) => {
     const count = aggregate(values, aggregation);
+
+    // 把 [0, 0.01) 当作 “没有数据”：不生成 heatmap cell
+    // 这样可以保证 0 不会落入任何颜色 bucket（避免被渲染成浅绿/浅蓝）
+    if (count >= 0 && count < 0.01) {
+      return;
+    }
+
     result.push({ date, count: Math.round(count * 100) / 100 });
   });
 
